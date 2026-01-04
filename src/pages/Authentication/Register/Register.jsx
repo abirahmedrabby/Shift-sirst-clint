@@ -1,5 +1,8 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import useAuth from "../../../hook/useAuth";
+import { Link } from "react-router";
+import SocalLogin from "../SocalLogin/SocalLogin";
 
 const Register = () => {
   const {
@@ -8,16 +11,27 @@ const Register = () => {
     formState: { errors },
   } = useForm();
 
+  const { createUser } = useAuth();
+
   const onsubmit = (data) => {
     console.log(data);
+    createUser(data.email, data.password)
+      .then((result) => {
+        console.log(result.user);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   return (
     <div className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
       <div className="card-body">
-        <h1>Creat a new account!</h1>
-        <form onSubmit={handleSubmit(onsubmit)}>
+        <h1 className="text-xl font-semibold mb-4">Create a new account!</h1>
+
+       
           <fieldset className="fieldset">
+             <form onSubmit={handleSubmit(onsubmit)}>
             <label className="label">Email</label>
             <input
               type="email"
@@ -25,34 +39,35 @@ const Register = () => {
               className="input"
               placeholder="Email"
             />
-
-            {errors.email?.type === "required" && (
-              <p className="text-red-700">Email Is Required </p>
+            {errors.email && (
+              <p className="text-red-700 text-sm">Email is required</p>
             )}
 
             <label className="label">Password</label>
             <input
               type="password"
-              {...register("password", { required: true, minLength: 6 })}
+              {...register("password", {
+                required: true,
+                minLength: 6,
+              })}
               className="input"
               placeholder="Password"
             />
-
             {errors.password?.type === "required" && (
-              <p className="text-red-600"> Password id required</p>
+              <p className="text-red-600 text-sm">Password is required</p>
+            )}
+            {errors.password?.type === "minLength" && (
+              <p className="text-red-700 text-sm">
+                Password must be at least 6 characters
+              </p>
             )}
 
-            {
-
-errors.password?.type === 'minLength' &&
-
-<p className=" text-red-700">password must be 6 characters </p>
-
-            }
-
-            <button className="btn btn-neutral mt-4">Register</button>
+            <button type="submit" className="btn btn-neutral mt-4 w-full">Register</button>
+             </form>
           </fieldset>
-        </form>
+          <p>Already have a account?<Link className="btn text-red-600 btn-link" to="/login">Login</Link> </p>
+          <SocalLogin></SocalLogin>
+       
       </div>
     </div>
   );
