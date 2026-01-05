@@ -333,7 +333,7 @@
     "region": "Rangpur",
     "district": "Nilphamari",
     "city": "Nilphamari",
-    "covered_area": ["Saidpur", "Domar", "Jaldhaka"],
+    "covered_area": ["Saidpur", "Domar", "Jaldhaka", "Nilphamari"],
     "status": "active",
     "flowchart": "https://example.com/nilphamari-flowchart.png",
     "longitude": 88.856,

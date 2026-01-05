@@ -5,8 +5,8 @@ import AuthLayout from "../layout/AuthLayout";
 import Login from "../pages/Authentication/Login/Login";
 import Register from "../pages/Authentication/Register/Register";
 import Covarage from "../pages/Covarage/Covarage";
-
-
+import PrivateRoutes from "../routers/PrivateRoutes";
+import SendParcel from "../pages/SendParcel/SendParcel";
 
 export const router = createBrowserRouter([
   {
@@ -21,8 +21,16 @@ export const router = createBrowserRouter([
       {
         path: "covarage",
         Component: Covarage,
-        loader: () => fetch('../../public/serviceCenter.json.json')
-     
+        loader: () => fetch("../../public/serviceCenter.json.json"),
+      },
+      {
+        path: "sendParcel",
+        element: (
+          <PrivateRoutes><SendParcel></SendParcel></PrivateRoutes>
+          
+        ),
+
+         loader: () => fetch("../../public/serviceCenter.json.json"),
       },
     ],
   },

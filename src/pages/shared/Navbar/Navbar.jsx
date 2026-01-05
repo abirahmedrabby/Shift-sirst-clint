@@ -1,18 +1,19 @@
 import React from 'react';
-import { NavLink } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import ShiftFirstLogo from './ShiftFirstLogo';
 
 const Navbar = () => {
 
     const navItems = <>
       <li><NavLink to="/">Home </NavLink></li>
+           <li><NavLink to="/sendParcel">Send Parcel </NavLink></li>
          <li><NavLink to="/covarage">Covarage </NavLink></li>
       <li><NavLink to="/about">About Us  </NavLink></li>
     
     </>
 
     return (
-       <div className="navbar bg-base-100 shadow-sm">
+       <div className="navbar  shadow-sm">
   <div className="navbar-start">
     <div className="dropdown">
       <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -32,7 +33,7 @@ const Navbar = () => {
     </ul>
   </div>
   <div className="navbar-end">
-    <a className="btn">Button</a>
+   <Link to="/login" className='btn btn-primary text-black'>Login</Link>
   </div>
 </div>
     );
