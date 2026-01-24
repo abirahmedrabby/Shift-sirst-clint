@@ -28,14 +28,13 @@ const PaymentForm = () => {
 
   console.log(parcelId);
 
+  const amount = parcelInfo.deliveryCost;
 
-const amount = parcelInfo.deliveryCost;
+  const amountInCents = amount * 100;
 
+  console.log(amountInCents);
 
-
-
-
-  const handelSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
@@ -59,6 +58,31 @@ const amount = parcelInfo.deliveryCost;
       setError("");
       console.log("payment ", paymentMethod);
     }
+
+    // step -2 create payment intent
+    const res = await axiosSecure.post("/create-payment-intent", {
+      amountInCents,
+      parcelId,
+    });
+
+    const clientSecret = res.data.clientSecret;
+
+const result = await stripe.confirmCardPayment(clientSecret, {
+  payment_method: {
+    card: elements.getElement(CardElement),
+    billing_details: {
+      name: 'Rabby',
+    },
+  },
+});
+
+    // 3️⃣ handle result
+    if (result.error) {
+      console.log("Payment error:", result.error.message);
+    } else {
+      console.log("Payment success:", result.paymentIntent);
+    }
+    console.log(result);
   };
 
   // CardElement এর styling
@@ -80,7 +104,7 @@ const amount = parcelInfo.deliveryCost;
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <form onSubmit={handelSubmit}>
+      <form onSubmit={handleSubmit}>
         <div className="border p-3 rounded mb-4">
           <CardElement options={cardElementOptions}></CardElement>
         </div>
