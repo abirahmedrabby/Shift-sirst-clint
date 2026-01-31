@@ -6,13 +6,13 @@ import useAuth from "../../../hook/useAuth";
 const Navbar = () => {
   const { user, logOut } = useAuth();
 
-const handelLogOut =() => {
-
-logOut()
-.then(result => { console.log(result)})
-.catch(error => console.log(error))
-
-}
+  const handelLogOut = () => {
+    logOut()
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((error) => console.log(error));
+  };
 
   const navItems = (
     <>
@@ -33,7 +33,9 @@ logOut()
           </li>
         </>
       )}
-
+ <li>
+        <NavLink to="/beaRaider">Be A Raider </NavLink>
+      </li>
       <li>
         <NavLink to="/">About Us </NavLink>
       </li>
@@ -52,7 +54,6 @@ logOut()
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-             
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -68,24 +69,24 @@ logOut()
             {navItems}
           </ul>
         </div>
-        <a className="btn btn-ghost text-xl">
+        <span className="btn btn-ghost text-xl">
           {" "}
           <ShiftFirstLogo></ShiftFirstLogo>
-        </a>
+        </span>
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">{navItems}</ul>
       </div>
       <div className="navbar-end">
-        {user ? 
+        {user ? (
           <button className="btn btn-primary text-black" onClick={handelLogOut}>
             Sing Out
           </button>
-         : 
+        ) : (
           <Link to="/login" className="btn btn-primary text-black">
             Login
           </Link>
-        }
+        )}
       </div>
     </div>
   );

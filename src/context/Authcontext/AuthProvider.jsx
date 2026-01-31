@@ -7,14 +7,11 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "../../firebase/firebase.innit";
 
-
-const googleProvider = new GoogleAuthProvider()
-
-
-
+const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
   const [loading, setLoding] = useState(true);
@@ -33,15 +30,15 @@ const AuthProvider = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-const sinInwidthGoogle = () => {
+  const sinInwidthGoogle = () => {
+    setLoding(true);
 
-setLoding(true)
+    return signInWithPopup(auth, googleProvider);
+  };
 
-return signInWithPopup(auth, googleProvider)
-
-}
-
-
+  const updateUserProfile = (profileInfo) => {
+    return updateProfile(auth.currentUser, profileInfo);
+  };
 
   const logOut = () => {
     // loading(true);
@@ -52,7 +49,7 @@ return signInWithPopup(auth, googleProvider)
   useEffect(() => {
     const unSubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-console.log('user in tha state change ' , currentUser)
+      console.log("user in tha state change ", currentUser);
       setLoding(false);
     });
 
@@ -62,9 +59,10 @@ console.log('user in tha state change ' , currentUser)
   }, []);
 
   const authInfo = {
-   createUser,
+    createUser,
     singIn,
     sinInwidthGoogle,
+    updateUserProfile,
     logOut,
     user,
     loading,

@@ -10,6 +10,8 @@ import SendParcel from "../pages/SendParcel/SendParcel";
 import DashbordLayout from "../layout/DashbordLayout";
 import MyParcels from "../pages/Dashbord/MyParcels/MyParcels";
 import Payment from "../pages/Dashbord/Payment/Payment";
+import PaymentHistory from "../pages/Dashbord/PaymentHistory/PaymentHistory";
+import BeaRaider from "../pages/Dashbord/BeaRaider/BeaRaider";
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +28,18 @@ export const router = createBrowserRouter([
         Component: Covarage,
         loader: () => fetch("../../public/serviceCenter.json.json"),
       },
+
+      {
+        path: "beaRaider",
+        element: (
+          <PrivateRoutes>
+            {" "}
+            <BeaRaider></BeaRaider>{" "}
+          </PrivateRoutes>
+        ),
+        loader: () => fetch("../../public/serviceCenter.json.json"),
+      },
+
       {
         path: "sendParcel",
         element: (
@@ -70,6 +84,10 @@ export const router = createBrowserRouter([
       {
         path: "payment/:parcelId",
         Component: Payment,
+      },
+      {
+        path: "PaymentHistory",
+        Component: PaymentHistory,
       },
     ],
   },

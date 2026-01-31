@@ -1,15 +1,21 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import useAxiosSecures from "../../../hook/useAxiosSecures";
+import useAuth from "../../../hook/useAuth";
+import Swal from "sweetalert2";
 
-const PaymentForm = () => {
+
+
+function PaymentForm() {
   const stripe = useStripe();
   const elements = useElements();
-  const [error, setError] = useState("");
+  const [error, setError] = useState();
+  const [isProcessing, setIsProcessing] = useState(false); // Add a state to track the loading state of the form submission
   const { parcelId } = useParams();
-
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const axiosSecure = useAxiosSecures();
 
   const { isPending, data: parcelInfo = {} } = useQuery({
@@ -24,16 +30,11 @@ const PaymentForm = () => {
     return "...loadingg";
   }
 
-  console.log(parcelInfo);
-
-  console.log(parcelId);
-
   const amount = parcelInfo.deliveryCost;
 
   const amountInCents = amount * 100;
 
-  console.log(amountInCents);
-
+  // Update the handleSubmit function to handle the loading state
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -41,25 +42,30 @@ const PaymentForm = () => {
       return;
     }
 
+    setIsProcessing(true); // Disable the button
+
     const card = elements.getElement(CardElement);
 
     if (!card) {
+      setIsProcessing(false);
       return;
     }
 
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
+    //  valided tha card
+
+    const { error } = await stripe.createPaymentMethod({
       type: "card",
       card,
     });
 
     if (error) {
       setError(error.message);
-    } else {
-      setError("");
-      console.log("payment ", paymentMethod);
+      setIsProcessing(false);
+      return;
     }
 
-    // step -2 create payment intent
+    // stpe-2 creat payment intent
+
     const res = await axiosSecure.post("/create-payment-intent", {
       amountInCents,
       parcelId,
@@ -67,22 +73,69 @@ const PaymentForm = () => {
 
     const clientSecret = res.data.clientSecret;
 
-const result = await stripe.confirmCardPayment(clientSecret, {
-  payment_method: {
-    card: elements.getElement(CardElement),
-    billing_details: {
-      name: 'Rabby',
-    },
-  },
-});
+    // step -3  confiram payment
 
-    // 3️⃣ handle result
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: elements.getElement(CardElement),
+        billing_details: {
+          name: user.displayName,
+          email: user.email,
+          phone: user.phoneNumber,
+        },
+      },
+    });
+
     if (result.error) {
-      console.log("Payment error:", result.error.message);
+      setError(result.error.message);
+      setIsProcessing(false);
     } else {
-      console.log("Payment success:", result.paymentIntent);
+      setError("");
+      if (result.paymentIntent.status === "succeeded") {
+
+const  transaction_id = result.paymentIntent.id
+
+
+
+
+        //  step -4 mark parcel paid aslo creat payment history
+
+        const paymentData = {
+          parcel_id: parcelId,
+          tracking_id: parcelInfo.tracking_id,
+          amount,
+          payment_method: result.paymentIntent.payment_method_types,
+          transaction_id: result.paymentIntent.id,
+          paid_by: user.email,
+        };
+
+        const paymentRes = await axiosSecure.post("/payments", paymentData);
+
+
+          console.log("paymentRes:", paymentRes);
+        // Add a console.log to debug the SweetAlert issue
+        if (paymentRes.data.success) {
+       
+
+          // ✅ SweetAlert with transaction ID
+          await Swal.fire({
+            icon: "success",
+            title: "Payment Successful!",
+            html: `
+      <p class="mb-2">Your payment has been completed.</p>
+      <p><strong>Transaction ID:</strong></p>
+      <code style="color:green;">${ transaction_id}</code>
+    `,
+            confirmButtonText: "Go to My Parcels",
+          });
+
+          // 🚀 Navigate after confirmation
+          navigate("/dashbord/myParcels");
+        }
+      }
     }
-    console.log(result);
+
+    setIsProcessing(false); // Re-enable the button
   };
 
   // CardElement এর styling
@@ -111,19 +164,23 @@ const result = await stripe.confirmCardPayment(clientSecret, {
         <button
           type="submit"
           className="btn btn-success w-full"
-          disabled={!stripe}
+          disabled={!stripe || isProcessing}
         >
-          Pay ৳{amount}
+          {isProcessing ? "Processing..." : `Pay $${amount}`}
         </button>
       </form>
 
       {error && <p className="text-red-600">{error}</p>}
       <div className="mt-4 p-3 bg-blue-100 rounded text-sm">
         <p className="font-semibold mb-2">Test Card Numbers:</p>
-        <p>✅ 4242 4242 4242 4242 (Success)</p>
+        {/* <p>✅  (Success)</p> */}
+
+        <textarea className="textarea textarea-ghost">
+          4242 4242 4242 4242
+        </textarea>
       </div>
     </div>
   );
-};
+}
 
 export default PaymentForm;

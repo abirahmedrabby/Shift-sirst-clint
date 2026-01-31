@@ -1,38 +1,48 @@
 import React from "react";
 import useAuth from "../../../hook/useAuth";
 import { useLocation, useNavigate } from "react-router";
+import useAxios from "../../../hook/useAxios";
 
 const SocalLogin = () => {
+  const { sinInwidthGoogle } = useAuth();
 
-const {sinInwidthGoogle} =useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const axiosinstance = useAxios();
+  const from = location.state?.from || "/";
 
-const location = useLocation();
-const navigate = useNavigate();
-const from = location.state?.from || '/'
+  const handelGoogleSingIn = () => {
+    sinInwidthGoogle()
+      .then(async (result) => {
+        const user = result.user;
+        console.log(result.user);
 
+        // update userinfo in tha database
 
-const handelGoogleSingIn = () => {
+        const userInfo = {
+          email: user.email,
+          role: "user", // default role
+          created_at: new Date().toISOString(),
+          last_log_in: new Date().toISOString(),
+        };
 
-sinInwidthGoogle()
-.then(result => {
+        const res = await axiosinstance.post("/users", userInfo);
+        console.log("socal data ", res.data);
 
-console.log(result.user);
-
-navigate(from);
-
-})
-.catch( error => {
-
-console.error(error);
-
-})
-
-}
+        navigate(from);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
   return (
     <div className="text-center">
-        <h1>Or</h1>
-      <button onClick={handelGoogleSingIn} className="btn bg-white text-black border-[#e5e5e5]">
+      <h1>Or</h1>
+      <button
+        onClick={handelGoogleSingIn}
+        className="btn bg-white text-black border-[#e5e5e5]"
+      >
         <svg
           aria-label="Google logo"
           width="16"

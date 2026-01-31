@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router";
 import SocalLogin from "../SocalLogin/SocalLogin";
 import useAuth from "../../../hook/useAuth";
-
+import useAxios from "../../../hook/useAxios";
 
 const Login = () => {
   const {
@@ -11,30 +11,37 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-const {singIn} =useAuth()
-const location = useLocation();
-const navigate = useNavigate();
+  const { singIn } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-const from = location.state?.from || "/"
+  const axiosinstance = useAxios();
+
+  const from = location.state?.from || "/";
 
   const onsubmit = (data) => {
-singIn(data.email, data.password)
-.then( result => {
-console.log(result.user)
-navigate(from)
+    singIn(data.email, data.password)
+      .then(async (result) => {
+        const userInfo = {
+          email: data.email,
+          role: "user", // default role
+          created_at: new Date().toISOString(),
+          last_log_in: new Date().toISOString(),
+        };
 
-})
-.catch( error => console.log(error))
+        const userRes = await axiosinstance.post("/users", userInfo);
+        console.log(userRes.data);
+
+        console.log(result.user);
+        navigate(from);
+      })
+      .catch((error) => console.log(error));
   };
-
-
-
-
 
   return (
     <div className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
       <div className="card-body">
-             <h1 className="text-xl font-semibold mb-4"> Login a account!</h1>
+        <h1 className="text-xl font-semibold mb-4"> Login a account!</h1>
         <form onSubmit={handleSubmit(onsubmit)}>
           <fieldset className="fieldset">
             <label className="label">Email</label>
@@ -69,8 +76,13 @@ navigate(from)
           </fieldset>
           <button className="btn btn-neutral mt-4 w-full">Login</button>
         </form>
-          <p>Already have a account?<Link className="btn text-red-600 btn-link" to="/register">Register</Link> </p>
-          <SocalLogin></SocalLogin>
+        <p>
+          Already have a account?
+          <Link className="btn text-red-600 btn-link" to="/register">
+            Register
+          </Link>{" "}
+        </p>
+        <SocalLogin></SocalLogin>
       </div>
     </div>
   );
