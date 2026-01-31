@@ -1,23 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import useAxiosSecures from "../../../hook/useAxiosSecures";
 
-const PendingRiders = () => {
+const ActiveRider = () => {
   const axiosSecure = useAxiosSecures();
+  const [search, setSearch] = useState("");
 
   const {
     data: riders = [],
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["pending-riders"],
+    queryKey: ["active-riders"],
     queryFn: async () => {
-      const res = await axiosSecure.get("/riders/pending");
+      const res = await axiosSecure.get("/riders/active");
       return res.data;
     },
   });
 
-  /* ================= View Rider ================= */
+  /* 🔍 Search by name or phone */
+  const filteredRiders = riders.filter((rider) =>
+    `${rider.name} ${rider.phone}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  /* 👁 View Rider */
   const handleView = (rider) => {
     Swal.fire({
       title: rider.name,
@@ -33,42 +42,34 @@ const PendingRiders = () => {
           <p><b>District:</b> ${rider.district}</p>
           <p><b>Bike Brand:</b> ${rider.bike_brand}</p>
           <p><b>Bike Reg:</b> ${rider.bike_registration}</p>
-          <p><b>NID:</b> ${rider.nid}</p>
-          <p><b>Applied At:</b> ${new Date(
-            rider.applied_at
-          ).toLocaleString()}</p>
+          <p><b>Status:</b> ${rider.application_status}</p>
         </div>
       `,
-      showCloseButton: true,
       confirmButtonText: "Close",
+      showCloseButton: true,
     });
   };
 
-  /* ================= Accept / Reject ================= */
-  const handleUpdateStatus = async (id, status) => {
-    const action = status === "active" ? "Accept" : "Reject";
-
+  /* 🚫 Deactivate Rider */
+  const handleDeactivate = async (id) => {
     const result = await Swal.fire({
-      title: `${action} Rider?`,
-      text: `Are you sure you want to ${action.toLowerCase()} this rider?`,
-      icon: status === "active" ? "question" : "warning",
+      title: "Deactivate Rider?",
+      text: "Rider will be inactive",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: action,
+      confirmButtonText: "Deactivate",
     });
 
     if (result.isConfirmed) {
       try {
-        await axiosSecure.patch(`/riders/status/${id}`, { status });
+        await axiosSecure.patch(`/riders/status/${id}`, {
+          status: "inactive",
+        });
 
-        Swal.fire(
-          "Success!",
-          `Rider ${action.toLowerCase()}ed successfully`,
-          "success"
-        );
-
+        Swal.fire("Success", "Rider deactivated", "success");
         refetch();
       } catch (error) {
-        Swal.fire("Error", "Failed to update rider status", "error", error);
+        Swal.fire("Error", "Failed to deactivate rider", "error", error);
       }
     }
   };
@@ -79,9 +80,20 @@ const PendingRiders = () => {
 
   return (
     <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Pending Riders ({riders.length})
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        Active Riders ({filteredRiders.length})
       </h2>
+
+      {/* 🔍 Search */}
+      <div className="flex justify-center mb-6">
+        <input
+          type="text"
+          placeholder="Search by name or phone"
+          className="input input-bordered w-full max-w-md"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
       {/* ================= DESKTOP TABLE ================= */}
       <div className="hidden md:block overflow-x-auto">
@@ -90,6 +102,7 @@ const PendingRiders = () => {
             <tr>
               <th>#</th>
               <th>Name</th>
+              <th>Phone</th>
               <th>Region</th>
               <th>District</th>
               <th>Status</th>
@@ -98,15 +111,16 @@ const PendingRiders = () => {
           </thead>
 
           <tbody>
-            {riders.map((rider, index) => (
+            {filteredRiders.map((rider, index) => (
               <tr key={rider._id}>
                 <th>{index + 1}</th>
-                <td className="capitalize">{rider.name}</td>
+                <td>{rider.name}</td>
+                <td>{rider.phone}</td>
                 <td>{rider.region}</td>
                 <td>{rider.district}</td>
                 <td>
-                  <span className="badge badge-warning text-black">
-                    Pending
+                  <span className="badge badge-success text-black">
+                    Active
                   </span>
                 </td>
                 <td className="flex gap-2 justify-center">
@@ -118,21 +132,10 @@ const PendingRiders = () => {
                   </button>
 
                   <button
-                    onClick={() =>
-                      handleUpdateStatus(rider._id, "active")
-                    }
-                    className="btn btn-xs btn-success"
-                  >
-                    Accept
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleUpdateStatus(rider._id, "rejected")
-                    }
+                    onClick={() => handleDeactivate(rider._id)}
                     className="btn btn-xs btn-error"
                   >
-                    Reject
+                    Deactivate
                   </button>
                 </td>
               </tr>
@@ -143,7 +146,7 @@ const PendingRiders = () => {
 
       {/* ================= MOBILE CARD VIEW ================= */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
-        {riders.map((rider) => (
+        {filteredRiders.map((rider) => (
           <div
             key={rider._id}
             className="border rounded-lg p-4 shadow bg-base-100"
@@ -156,14 +159,15 @@ const PendingRiders = () => {
               />
               <div>
                 <h3 className="font-semibold">{rider.name}</h3>
+                <p className="text-sm text-gray-500">{rider.phone}</p>
                 <p className="text-sm text-gray-500">
                   {rider.region}, {rider.district}
                 </p>
               </div>
             </div>
 
-            <span className="badge badge-warning text-black mt-3">
-              Pending
+            <span className="badge badge-success text-black mt-3">
+              Active
             </span>
 
             <div className="flex gap-2 mt-4">
@@ -175,34 +179,23 @@ const PendingRiders = () => {
               </button>
 
               <button
-                onClick={() =>
-                  handleUpdateStatus(rider._id, "active")
-                }
-                className="btn btn-xs btn-success"
-              >
-                Accept
-              </button>
-
-              <button
-                onClick={() =>
-                  handleUpdateStatus(rider._id, "rejected")
-                }
+                onClick={() => handleDeactivate(rider._id)}
                 className="btn btn-xs btn-error"
               >
-                Reject
+                Deactivate
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      {riders.length === 0 && (
+      {filteredRiders.length === 0 && (
         <p className="text-center mt-6 text-gray-500">
-          No pending riders found
+          No active riders found
         </p>
       )}
     </div>
   );
 };
 
-export default PendingRiders;
+export default ActiveRider;

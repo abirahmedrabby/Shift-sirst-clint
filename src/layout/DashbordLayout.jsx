@@ -91,14 +91,14 @@ const DashbordLayout = () => {
             collapsed={collapsed}
           />
           <NavItem
-            to="/dashbord/riders/active"
+            to="/dashbord/ActiveRider"
             icon={<FaMotorcycle />}
             label="Active Riders"
             collapsed={collapsed}
           />
 
           <NavItem
-            to="/dashbord/riders/pending"
+            to="/dashbord/pendingRiders"
             icon={<FaUserClock />}
             label="Pending Riders"
             collapsed={collapsed}

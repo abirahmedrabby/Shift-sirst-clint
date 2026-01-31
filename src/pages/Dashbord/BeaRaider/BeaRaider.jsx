@@ -6,7 +6,7 @@ import useAuth from "../../../hook/useAuth";
 import useAxiosSecures from "../../../hook/useAxiosSecures";
 
 const BeaRider = () => {
-const {user} =useAuth();
+  const { user } = useAuth();
 
   const serviceCenters = useLoaderData();
 
@@ -18,41 +18,29 @@ const {user} =useAuth();
   } = useForm();
 
   const selectedRegion = watch("region");
-const axiosSecure = useAxiosSecures();
-
-
-
-
+  const axiosSecure = useAxiosSecures();
 
   // submit
   const onSubmit = (data) => {
     const finalData = {
       ...data,
-      name: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL || "",
-      application_status: "pending",
-      applied_at: new Date().toISOString(),
+      name: user?.displayName || "",
+      email: user?.email || "",
+  photoURL: user.photoURL || "",
+      status: "pending",
+      created_at: new Date().toISOString(),
     };
 
     console.log("RIDER APPLICATION DATA:", finalData);
 
+    axiosSecure
+      .post("/riders", finalData)
 
-
-axiosSecure.post('/riders', finalData)
-
-.then( res => {
-
-if(res.data.insertedId){
-
-toast.success("Rider application submitted!");
-
-}
-})
-
-
-
-    
+      .then((res) => {
+        if (res.data.insertedId) {
+          toast.success("Rider application submitted!");
+        }
+      });
   };
 
   return (
@@ -102,7 +90,6 @@ toast.success("Rider application submitted!");
 
       {/* ===== Rider Application Form ===== */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
         {/* Age */}
         <div>
           <input
@@ -142,9 +129,7 @@ toast.success("Rider application submitted!");
             {...register("nid", { required: true })}
           />
           {errors.nid && (
-            <p className="text-red-600 text-sm mt-1">
-              NID is required
-            </p>
+            <p className="text-red-600 text-sm mt-1">NID is required</p>
           )}
         </div>
 
@@ -155,18 +140,14 @@ toast.success("Rider application submitted!");
             {...register("region", { required: true })}
           >
             <option value="">Select Region</option>
-            {[...new Set(serviceCenters.map((s) => s.region))].map(
-              (region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              )
-            )}
+            {[...new Set(serviceCenters.map((s) => s.region))].map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
           </select>
           {errors.region && (
-            <p className="text-red-600 text-sm mt-1">
-              Region is required
-            </p>
+            <p className="text-red-600 text-sm mt-1">Region is required</p>
           )}
         </div>
 
@@ -186,9 +167,7 @@ toast.success("Rider application submitted!");
               ))}
           </select>
           {errors.district && (
-            <p className="text-red-600 text-sm mt-1">
-              District is required
-            </p>
+            <p className="text-red-600 text-sm mt-1">District is required</p>
           )}
         </div>
 
